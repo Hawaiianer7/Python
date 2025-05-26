@@ -1,0 +1,19 @@
+image: Visual Studio 2022
+
+environment:
+  PYTHON: "C:\\Python310"
+
+install:
+  - "%PYTHON%\\python.exe -m pip install --upgrade pip"
+  - "%PYTHON%\\python.exe -m pip install -r requirements.txt"
+
+build_script:
+  - "%PYTHON%\\python.exe -m PyInstaller --onefile --name openimmo main.py"
+
+artifacts:
+  - path: dist\\openimmo.exe
+    name: openimmo_exe
+
+# optional, wenn du ein privates Repo baust:
+#init:
+#  - git config --global url."https://<GITHUB_USERNAME>:<GITHUB_TOKEN>@github.com/".insteadOf "https://github.com/"
