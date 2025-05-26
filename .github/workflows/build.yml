@@ -25,7 +25,7 @@ jobs:
 
       - name: PyInstaller ausführen
         run: |
-          pyinstaller --onefile --name openimmo main.py
+          pyinstaller --onefile --name openimmo objektanfragen.py
 
       - name: EXE als Artifact speichern
         uses: actions/upload-artifact@v4
