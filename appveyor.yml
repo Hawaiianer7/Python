@@ -8,7 +8,7 @@ install:
   - "%PYTHON%\\python.exe -m pip install -r requirements.txt"
 
 build_script:
-  - "%PYTHON%\\python.exe -m PyInstaller --onefile --name openimmo main.py"
+  - "%PYTHON%\\python.exe -m PyInstaller --onefile --name openimmo-tool objektanfragen.py"
 
 artifacts:
   - path: dist\\openimmo.exe
