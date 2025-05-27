@@ -18,16 +18,42 @@ SMTP_PASSWORD = 'estateSQLpw2010'
 fake = Faker("de_DE")
 app = Flask(__name__)
 
+def replace_umlauts(s):
+    umlaut_map = {
+        'ä': 'ae',
+        'ö': 'oe',
+        'ü': 'ue',
+        'ß': 'ss',
+        'Ä': 'Ae',
+        'Ö': 'Oe',
+        'Ü': 'Ue'
+    }
+    for umlaut, replacement in umlaut_map.items():
+        s = s.replace(umlaut, replacement)
+    return s
+
+
 def generate_interessent():
     first = fake.first_name()
     last = fake.last_name()
-    email = f"{first.lower()}.{last.lower()}@empro.invalid"
+
+    # Umlaute ersetzen
+    first_ascii = replace_umlauts(first.lower())
+    last_ascii = replace_umlauts(last.lower())
+
+    email = f"{first_ascii}.{last_ascii}@empro.invalid"
     phone = fake.phone_number()
+    street = fake.street_name() + " " + str(random.randint(0,30))
+    city = fake.city()
+    zip = fake.postcode()
     return {
         "vorname": first,
         "nachname": last,
         "email": email,
-        "tel": phone
+        "tel": phone,
+        "street": street,
+        "city": city,
+        "zip": zip
     }
 
 def create_openimmo_xml(objektnr, interessent):
@@ -44,6 +70,9 @@ def create_openimmo_xml(objektnr, interessent):
     etree.SubElement(anfragedaten, "vorname").text = interessent["vorname"]
     etree.SubElement(anfragedaten, "nachname").text = interessent["nachname"]
     etree.SubElement(anfragedaten, "email").text = interessent["email"]
+    etree.SubElement(anfragedaten, "strasse").text = interessent["street"]
+    etree.SubElement(anfragedaten, "plz").text = interessent["zip"]
+    etree.SubElement(anfragedaten, "ort").text = interessent["city"]
     etree.SubElement(anfragedaten, "tel").text = interessent["tel"]
     etree.SubElement(anfragedaten, "anfrage").text = "Ich möchte gerne besichtigen"
     return etree.tostring(root, pretty_print=True, xml_declaration=True, encoding='iso-8859-1')
