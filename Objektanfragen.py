@@ -11,7 +11,7 @@ from flask import Flask, request, render_template_string
 # =============== CONFIG ================
 SMTP_SERVER = 'w01f25a5.kasserver.com'
 SMTP_PORT = 587
-SMTP_USER = 'sales2@emprochen.de'
+SMTP_USER = 'info@emprochen.de'
 SMTP_PASSWORD = 'estateSQLpw2010'
 
 # ============ HELPERS =================
@@ -99,7 +99,7 @@ def index():
         for i in range(anzahl):
             interessent = generate_interessent()
             xml_data = create_openimmo_xml(objektnr, interessent)
-            send_email(receiver, f"Objektanfrage {objektnr}", xml_data)
+            send_email(receiver, f"Objektanfrage von immowelt.de zu {objektnr}", xml_data)
 
         return f"{anzahl} Anfragen wurden erfolgreich an {receiver} gesendet."
     
