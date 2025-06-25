@@ -12,7 +12,7 @@ from flask import Flask, request, render_template_string
 SMTP_SERVER = 'w01f25a5.kasserver.com'
 SMTP_PORT = 587
 SMTP_USER = 'info@emprochen.de'
-SMTP_PASSWORD = 'estateSQLpw2010'
+SMTP_PASSWORD = ''
 
 # ============ HELPERS =================
 fake = Faker("de_DE")
@@ -89,6 +89,7 @@ def send_email(receiver_email, subject, xml_data):
 
     with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
         server.starttls()
+        print(SMTP_PASSWORD)
         server.login(SMTP_USER, SMTP_PASSWORD)
         server.send_message(msg)
 
@@ -112,6 +113,9 @@ HTML_FORM = """
         <label>Anzahl der Anfragen:</label><br>
         <input type="number" name="anzahl" min="1" required><br><br>
 
+        <label>SMTP PW:</label><br>
+        <input type="text" name="smtppw" min="1" required><br><br>
+
         <button type="submit">Anfragen senden</button>
     </form>
 </body>
@@ -123,6 +127,7 @@ def index():
     if request.method == 'POST':
         receiver = request.form['receiver']
         objektnr = request.form['objektnr']
+        SMTP_PASSWORD = request.form['smtppw']
         anzahl = int(request.form['anzahl'])
         
         for i in range(anzahl):
