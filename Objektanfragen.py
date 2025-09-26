@@ -12,7 +12,7 @@ from flask import Flask, request, render_template_string
 SMTP_SERVER = 'w01f25a5.kasserver.com'
 SMTP_PORT = 587
 SMTP_USER = 'info@emprochen.de'
-SMTP_PASSWORD = ''
+smtp_pw = ''
 
 # ============ HELPERS =================
 fake = Faker("de_DE")
@@ -36,6 +36,7 @@ def replace_umlauts(s):
 def generate_interessent():
     first = fake.first_name()
     last = fake.last_name()
+    company = fake.company()
 
     # Umlaute ersetzen
     first_ascii = replace_umlauts(first.lower())
@@ -53,10 +54,11 @@ def generate_interessent():
         "tel": phone,
         "street": street,
         "city": city,
-        "zip": zip
+        "zip": zip,
+        "company": company
     }
 
-def create_openimmo_xml(objektnr, interessent):
+def create_openimmo_xml(objektnr, interessent,companyrequired):
     NSMAP = {None: "http://www.openimmo.de"}
     root = etree.Element("openimmo_feedback", nsmap=NSMAP)
 
@@ -67,8 +69,13 @@ def create_openimmo_xml(objektnr, interessent):
 
     anfragedaten = etree.SubElement(anfrage, "interessent")
 
+    
+
     etree.SubElement(anfragedaten, "vorname").text = interessent["vorname"]
     etree.SubElement(anfragedaten, "nachname").text = interessent["nachname"]
+    if companyrequired:
+        etree.SubElement(anfragedaten, "firma").text = interessent["company"]
+
     etree.SubElement(anfragedaten, "email").text = interessent["email"]
     etree.SubElement(anfragedaten, "strasse").text = interessent["street"]
     etree.SubElement(anfragedaten, "plz").text = interessent["zip"]
@@ -77,7 +84,7 @@ def create_openimmo_xml(objektnr, interessent):
     etree.SubElement(anfragedaten, "anfrage").text = "Ich möchte gerne besichtigen"
     return etree.tostring(root, pretty_print=True, xml_declaration=True, encoding='iso-8859-1')
 
-def send_email(receiver_email, subject, xml_data):
+def send_email(receiver_email, subject, xml_data,smtp_pw):
     msg = EmailMessage()
     msg['Subject'] = subject
     msg['From'] = SMTP_USER
@@ -89,8 +96,8 @@ def send_email(receiver_email, subject, xml_data):
 
     with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
         server.starttls()
-        print(SMTP_PASSWORD)
-        server.login(SMTP_USER, SMTP_PASSWORD)
+        print(smtp_pw)
+        server.login(SMTP_USER, smtp_pw)
         server.send_message(msg)
 
 # ============ FLASK WEB UI ============
@@ -110,6 +117,9 @@ HTML_FORM = """
         <label>Objektnummer:</label><br>
         <input type="text" name="objektnr" required><br><br>
 
+        <label>Firmendatensatz:</label><br>
+        <input type="checkbox" name="companyrequired" unchecked><br><br>
+
         <label>Anzahl der Anfragen:</label><br>
         <input type="number" name="anzahl" min="1" required><br><br>
 
@@ -127,13 +137,14 @@ def index():
     if request.method == 'POST':
         receiver = request.form['receiver']
         objektnr = request.form['objektnr']
-        SMTP_PASSWORD = request.form['smtppw']
+        companyrequired = request.form['companyrequired']
+        smtp_pw = request.form['smtppw']
         anzahl = int(request.form['anzahl'])
         
         for i in range(anzahl):
             interessent = generate_interessent()
-            xml_data = create_openimmo_xml(objektnr, interessent)
-            send_email(receiver, f"Objektanfrage von immowelt.de zu {objektnr}", xml_data)
+            xml_data = create_openimmo_xml(objektnr, interessent,companyrequired)
+            send_email(receiver, f"Objektanfrage von immowelt.de zu {objektnr}", xml_data,smtp_pw)
 
         return f"{anzahl} Anfragen wurden erfolgreich an {receiver} gesendet."
     
