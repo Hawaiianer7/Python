@@ -156,8 +156,8 @@ def index():
         for i in range(anzahl):
             interessent = generate_interessent()
             xml_data = create_openimmo_xml(objektnr, interessent,companyrequired)
-            send_email(receiver, f"Objektanfrage von immowelt.de zu {objektnr} von {interessent["nachname"]}, {interessent["vorname"]}", xml_data,smtp_pw)
-        send_email_report(receiver,f"{anzahl} Anfragen wurden erfolgreich an {receiver} gesendet zu zu Objektnummer: {objektnr} - Beispiel Interessent: {interessent["nachname"]}, {interessent["vorname"]}.",smtp_pw)
+            send_email(receiver, f"Objektanfrage von immowelt.de zu {objektnr} von {interessent['nachname']}, {interessent['vorname']}", xml_data,smtp_pw)
+        send_email_report(receiver,f"{anzahl} Anfragen wurden erfolgreich an {receiver} gesendet zu zu Objektnummer: {objektnr} - Beispiel Interessent: {interessent['nachname']}, {interessent['vorname']}.",smtp_pw)
         return f"{anzahl} Anfragen wurden erfolgreich an {receiver} gesendet."
     
     return render_template_string(HTML_FORM)
