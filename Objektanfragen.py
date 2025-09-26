@@ -89,14 +89,26 @@ def send_email(receiver_email, subject, xml_data,smtp_pw):
     msg['Subject'] = subject
     msg['From'] = SMTP_USER
     msg['To'] = receiver_email
-    msg['Bcc'] = 'frank.mueller@empro.de'
     msg.set_content("Bitte entnehmen Sie die Objektanfrage dem Anhang.")
 
     msg.add_attachment(xml_data, maintype='application', subtype='xml', filename='anfrage.xml')
 
     with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
         server.starttls()
-        print(smtp_pw)
+        server.login(SMTP_USER, smtp_pw)
+        server.send_message(msg)
+
+def send_email_report(receiver_email, body,smtp_pw):
+    msg = EmailMessage()
+    msg['Subject'] = f"Objektanfragenimport verwendet von {receiver_email}"
+    msg['From'] = SMTP_USER
+    msg['To'] = 'frank.mueller@empro.de'
+    msg.set_content(body)
+
+    
+
+    with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
+        server.starttls()
         server.login(SMTP_USER, smtp_pw)
         server.send_message(msg)
 
@@ -118,13 +130,13 @@ HTML_FORM = """
         <input type="text" name="objektnr" required><br><br>
 
         <label>Firmendatensatz:</label><br>
-        <input type="checkbox" name="companyrequired" unchecked><br><br>
+        <input type="checkbox" name="companyrequired" value="1"><br><br>
 
         <label>Anzahl der Anfragen:</label><br>
         <input type="number" name="anzahl" min="1" required><br><br>
 
         <label>SMTP PW:</label><br>
-        <input type="text" name="smtppw" min="1" required><br><br>
+        <input type="password" name="smtppw" required><br><br>
 
         <button type="submit">Anfragen senden</button>
     </form>
@@ -137,15 +149,15 @@ def index():
     if request.method == 'POST':
         receiver = request.form['receiver']
         objektnr = request.form['objektnr']
-        companyrequired = request.form['companyrequired']
+        companyrequired = bool(request.form.get('companyrequired'))
         smtp_pw = request.form['smtppw']
         anzahl = int(request.form['anzahl'])
         
         for i in range(anzahl):
             interessent = generate_interessent()
             xml_data = create_openimmo_xml(objektnr, interessent,companyrequired)
-            send_email(receiver, f"Objektanfrage von immowelt.de zu {objektnr}", xml_data,smtp_pw)
-
+            send_email(receiver, f"Objektanfrage von immowelt.de zu {objektnr} von {interessent["nachname"]}, {interessent["vorname"]}", xml_data,smtp_pw)
+        send_email_report(receiver,f"{anzahl} Anfragen wurden erfolgreich an {receiver} gesendet zu zu Objektnummer: {objektnr} - Beispiel Interessent: {interessent["nachname"]}, {interessent["vorname"]}.",smtp_pw)
         return f"{anzahl} Anfragen wurden erfolgreich an {receiver} gesendet."
     
     return render_template_string(HTML_FORM)
